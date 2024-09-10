@@ -96,6 +96,21 @@ else
     exit 1
 fi
 
+# Now cretea a cron job to run the expire_rows procedure every day at 12am
+DELETE_CRON_HISTORY_SQL="SELECT cron.schedule('delete-job-run-details', '0 0 * * *', 'DELETE FROM cron.job_run_details WHERE end_time < now() - interval ''24 hours''');"
+
+# Run the PSQL command
+echo "Creating cron job to delete cron history..."
+psql "$DB_URL" -c "$DELETE_CRON_HISTORY_SQL"
+
+# Check if the command was successful
+if [ $? -eq 0 ]; then
+    echo "Cron job to delete cron history created successfully."
+else
+    echo "Error: Failed to create cron job to delete cron history. Please reach out to $SUPPORT_EMAIL"
+    exit 1
+fi
+
 # Now show the user the cron job created
 SHOW_CRON_JOB_SQL="
 SELECT * FROM cron.job;
